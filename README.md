@@ -29,7 +29,7 @@ Once opened on your phone, use "Add to Home Screen" (Safari share menu / Chrome 
 
 ## Browser support
 
-Auto-transcription uses the Web Speech API, supported in Chrome, Edge, and Safari (iOS 14.5+). Firefox doesn't support it — typing still works everywhere.
+Auto-transcription uses the Web Speech API, supported in Chrome, Edge, and Safari (iOS 14.5+). Language availability varies by browser and device; Filipino may not be available in iPhone Safari. Firefox doesn't support it — typing still works everywhere.
 
 ## How it works
 

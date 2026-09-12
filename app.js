@@ -98,12 +98,12 @@
     };
 
     r.onerror = (event) => {
-      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      if (event.error === 'not-allowed') {
         alert('Microphone access was denied. Allow microphone permission for this page to enable auto-transcription.');
         shouldKeepListening = false;
         setListeningUI(false);
-      } else if (event.error === 'language-not-supported') {
-        alert('This browser does not support one of the selected recognition languages. Try English or Filipino separately.');
+      } else if (event.error === 'service-not-allowed' || event.error === 'language-not-supported') {
+        alert('Speech recognition is unavailable for this language in this browser. Try English, Chrome or Edge, or use a different speech-recognition service.');
         shouldKeepListening = false;
         setListeningUI(false);
       } else if (event.error === 'audio-capture') {
