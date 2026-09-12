@@ -4,6 +4,7 @@
   const langSelect = document.getElementById('langSelect');
   const exportBtn = document.getElementById('exportBtn');
   const clearBtn = document.getElementById('clearBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
   const unsupportedBanner = document.getElementById('unsupportedBanner');
   const captionBar = document.getElementById('captionBar');
   const captionText = document.getElementById('captionText');
@@ -26,7 +27,8 @@
   notes.addEventListener('input', scheduleSave);
   langSelect.addEventListener('change', () => {
     localStorage.setItem(LANG_KEY, langSelect.value);
-    if (isListening) restartRecognition();
+    mixedLanguageIndex = 0;
+    if (shouldKeepListening || isPaused) restartRecognition();
   });
 
   // ---- Export ----
@@ -56,8 +58,11 @@
   let recognition = null;
   let isListening = false;
   let shouldKeepListening = false;
+  let isPaused = false;
   let sessionStarted = false;
   let mixedLanguageIndex = 0;
+  let restartTimer = null;
+  let activeRecognitionToken = null;
 
   function getRecognitionLanguage() {
     if (langSelect.value !== 'mixed-PH') return langSelect.value;
@@ -76,17 +81,24 @@
 
   function createRecognition() {
     const r = new SpeechRecognition();
+    const token = {};
+    const processedFinalIndexes = new Set();
+    activeRecognitionToken = token;
     r.continuous = true;
     r.interimResults = true;
     r.lang = langSelect.value === 'mixed-PH' ? 'fil-PH' : langSelect.value;
 
     r.onresult = (event) => {
+      if (token !== activeRecognitionToken) return;
       let finalChunk = '';
       let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
-          finalChunk += result[0].transcript;
+          if (!processedFinalIndexes.has(i)) {
+            finalChunk += result[0].transcript;
+            processedFinalIndexes.add(i);
+          }
         } else {
           interim += result[0].transcript;
         }
@@ -98,6 +110,7 @@
     };
 
     r.onerror = (event) => {
+      if (token !== activeRecognitionToken) return;
       if (event.error === 'not-allowed') {
         alert('Microphone access was denied. Allow microphone permission for this page to enable auto-transcription.');
         shouldKeepListening = false;
@@ -115,11 +128,10 @@
     };
 
     r.onend = () => {
+      if (token !== activeRecognitionToken) return;
       isListening = false;
-      if (shouldKeepListening) {
-        setTimeout(() => {
-          if (shouldKeepListening) startRecognition();
-        }, 200);
+      if (shouldKeepListening && !isPaused) {
+        scheduleRecognitionStart();
       } else {
         setListeningUI(false);
         showCaption('');
@@ -130,28 +142,42 @@
   }
 
   function startRecognition() {
-    if (!recognition) return;
+    if (!recognition || isListening || !shouldKeepListening || isPaused) return;
     try {
       recognition.lang = getRecognitionLanguage();
       recognition.start();
       isListening = true;
       setListeningUI(true);
     } catch (e) {
-      // start() throws if already started; ignore
+      scheduleRecognitionStart(300);
     }
   }
 
+  function scheduleRecognitionStart(delay = 200) {
+    clearTimeout(restartTimer);
+    restartTimer = setTimeout(() => {
+      restartTimer = null;
+      startRecognition();
+    }, delay);
+  }
+
   function restartRecognition() {
-    if (!recognition) return;
-    try { recognition.stop(); } catch (e) {}
-    mixedLanguageIndex = 0;
+    clearTimeout(restartTimer);
+    const oldRecognition = recognition;
+    activeRecognitionToken = null;
+    recognition = null;
+    isListening = false;
+    try { oldRecognition.stop(); } catch (e) {}
     recognition = createRecognition();
-    if (shouldKeepListening) startRecognition();
+    if (shouldKeepListening && !isPaused) scheduleRecognitionStart();
   }
 
   function setListeningUI(listening) {
     micBtn.classList.toggle('listening', listening);
     micBtn.setAttribute('aria-label', listening ? 'Stop recording' : 'Start recording');
+    pauseBtn.hidden = !listening && !isPaused;
+    pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+    pauseBtn.setAttribute('aria-label', isPaused ? 'Resume listening' : 'Pause listening');
   }
 
   function showCaption(text) {
@@ -180,17 +206,36 @@
 
   micBtn.addEventListener('click', () => {
     if (!recognition) return;
-    if (isListening || shouldKeepListening) {
+    if (isListening || shouldKeepListening || isPaused) {
       shouldKeepListening = false;
+      isPaused = false;
       sessionStarted = false;
-      try { recognition.stop(); } catch (e) {}
+      restartRecognition();
       setListeningUI(false);
       showCaption('');
     } else {
       shouldKeepListening = true;
+      isPaused = false;
       sessionStarted = false;
       startRecognition();
     }
+  });
+
+  pauseBtn.addEventListener('click', () => {
+    if (!recognition) return;
+    if (isPaused) {
+      isPaused = false;
+      shouldKeepListening = true;
+      setListeningUI(false);
+      scheduleRecognitionStart();
+      return;
+    }
+    if (!shouldKeepListening && !isListening) return;
+    shouldKeepListening = false;
+    isPaused = true;
+    restartRecognition();
+    setListeningUI(false);
+    showCaption('');
   });
 
   // ---- PWA service worker ----
