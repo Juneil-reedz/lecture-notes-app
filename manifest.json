@@ -1,0 +1,19 @@
+{
+  "name": "Lecture Notes",
+  "short_name": "Notes",
+  "description": "Auto-transcribes speech into notes while you type alongside it.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#2f6f4f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

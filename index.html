@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lecture Notes</title>
+<meta name="theme-color" content="#2f6f4f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1>Lecture Notes</h1>
+  <div class="topbar-actions">
+    <select id="langSelect" title="Recognition language">
+      <option value="en-US">English (US)</option>
+      <option value="en-GB">English (UK)</option>
+      <option value="fil-PH">Filipino</option>
+      <option value="es-ES">Spanish</option>
+      <option value="fr-FR">French</option>
+    </select>
+    <button id="exportBtn" class="icon-btn" title="Export as .txt">⬇</button>
+    <button id="clearBtn" class="icon-btn" title="Clear notes">🗑</button>
+  </div>
+</header>
+
+<div id="unsupportedBanner" class="banner" hidden>
+  Speech recognition isn't supported in this browser. You can still type notes manually. Try Chrome, Edge, or Safari for auto-transcription.
+</div>
+
+<main class="paper-wrap">
+  <textarea id="notes" class="paper" placeholder="Notes will appear here as the teacher speaks — or start typing anytime…" autocomplete="off" autocapitalize="sentences" spellcheck="true"></textarea>
+</main>
+
+<div id="captionBar" class="caption-bar" hidden>
+  <span class="dot"></span>
+  <span id="captionText"></span>
+</div>
+
+<footer class="controls">
+  <button id="micBtn" class="mic-btn" title="Start/stop listening" aria-label="Start recording">
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+      <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/>
+      <path d="M19 11a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 0 0-2 0 7 7 0 0 0 6 6.92V20H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.08A7 7 0 0 0 19 11z"/>
+    </svg>
+  </button>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
