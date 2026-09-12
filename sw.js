@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lecture-notes-v2';
+const CACHE_NAME = 'lecture-notes-v3';
 const ASSETS = [
   './',
   './index.html',

@@ -61,7 +61,7 @@
 
   function getRecognitionLanguage() {
     if (langSelect.value !== 'mixed-PH') return langSelect.value;
-    const language = mixedLanguageIndex % 2 === 0 ? 'fil-PH' : 'en-PH';
+    const language = mixedLanguageIndex % 2 === 0 ? 'fil-PH' : 'en-US';
     mixedLanguageIndex++;
     return language;
   }
@@ -100,6 +100,10 @@
     r.onerror = (event) => {
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         alert('Microphone access was denied. Allow microphone permission for this page to enable auto-transcription.');
+        shouldKeepListening = false;
+        setListeningUI(false);
+      } else if (event.error === 'language-not-supported') {
+        alert('This browser does not support one of the selected recognition languages. Try English or Filipino separately.');
         shouldKeepListening = false;
         setListeningUI(false);
       } else if (event.error === 'audio-capture') {
