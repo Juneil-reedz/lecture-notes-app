@@ -33,8 +33,8 @@ Auto-transcription uses the Web Speech API, supported in Chrome, Edge, and Safar
 
 ## How it works
 
-- Tap the mic button to start listening; it keeps listening continuously (auto-restarts through pauses) until you tap it again.
-- Use **Pause** to temporarily stop listening without ending the current note session, then tap **Resume** to continue.
+- Tap the mic button to start listening. Use **Pause** to temporarily stop listening without ending the current note session, then tap **Resume** to continue.
+- Some mobile browsers end speech recognition after a period of silence. The app does not restart it automatically, avoiding repeated microphone sounds; tap **Resume** when you want to continue.
 - Choose **Filipino + English (mixed)** when a lecture switches between Tagalog and English. The browser alternates Filipino and US-English recognition models between speech segments; results vary by browser because the Web Speech API does not provide true simultaneous language detection.
 - Recognized speech is appended to the notes area, each recording session prefixed with a timestamp.
 - While listening, the current in-progress phrase shows in the caption bar above the mic button before it's finalized into the notes.

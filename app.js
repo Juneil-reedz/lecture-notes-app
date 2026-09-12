@@ -28,7 +28,11 @@
   langSelect.addEventListener('change', () => {
     localStorage.setItem(LANG_KEY, langSelect.value);
     mixedLanguageIndex = 0;
-    if (shouldKeepListening || isPaused) restartRecognition();
+    if (isListening && recognition) {
+      recognition.lang = langSelect.value === 'mixed-PH' ? 'fil-PH' : langSelect.value;
+    } else if (isPaused) {
+      restartRecognition();
+    }
   });
 
   // ---- Export ----
@@ -61,8 +65,9 @@
   let isPaused = false;
   let sessionStarted = false;
   let mixedLanguageIndex = 0;
-  let restartTimer = null;
   let activeRecognitionToken = null;
+  let lastFinalText = '';
+  let lastFinalAt = 0;
 
   function getRecognitionLanguage() {
     if (langSelect.value !== 'mixed-PH') return langSelect.value;
@@ -83,10 +88,15 @@
     const r = new SpeechRecognition();
     const token = {};
     const processedFinalIndexes = new Set();
+    let endedWithError = false;
     activeRecognitionToken = token;
     r.continuous = true;
     r.interimResults = true;
     r.lang = langSelect.value === 'mixed-PH' ? 'fil-PH' : langSelect.value;
+
+    r.onstart = () => {
+      processedFinalIndexes.clear();
+    };
 
     r.onresult = (event) => {
       if (token !== activeRecognitionToken) return;
@@ -112,14 +122,17 @@
     r.onerror = (event) => {
       if (token !== activeRecognitionToken) return;
       if (event.error === 'not-allowed') {
+        endedWithError = true;
         alert('Microphone access was denied. Allow microphone permission for this page to enable auto-transcription.');
         shouldKeepListening = false;
         setListeningUI(false);
       } else if (event.error === 'service-not-allowed' || event.error === 'language-not-supported') {
+        endedWithError = true;
         alert('Speech recognition is unavailable for this language in this browser. Try English, Chrome or Edge, or use a different speech-recognition service.');
         shouldKeepListening = false;
         setListeningUI(false);
       } else if (event.error === 'audio-capture') {
+        endedWithError = true;
         alert('No microphone was found.');
         shouldKeepListening = false;
         setListeningUI(false);
@@ -130,12 +143,10 @@
     r.onend = () => {
       if (token !== activeRecognitionToken) return;
       isListening = false;
-      if (shouldKeepListening && !isPaused) {
-        scheduleRecognitionStart();
-      } else {
-        setListeningUI(false);
-        showCaption('');
-      }
+      shouldKeepListening = false;
+      isPaused = !endedWithError;
+      setListeningUI(false);
+      showCaption('');
     };
 
     return r;
@@ -149,20 +160,12 @@
       isListening = true;
       setListeningUI(true);
     } catch (e) {
-      scheduleRecognitionStart(300);
+      isListening = false;
+      setListeningUI(false);
     }
   }
 
-  function scheduleRecognitionStart(delay = 200) {
-    clearTimeout(restartTimer);
-    restartTimer = setTimeout(() => {
-      restartTimer = null;
-      startRecognition();
-    }, delay);
-  }
-
   function restartRecognition() {
-    clearTimeout(restartTimer);
     const oldRecognition = recognition;
     activeRecognitionToken = null;
     recognition = null;
@@ -191,6 +194,21 @@
   }
 
   function appendFinalText(text) {
+    const normalizedText = text.replace(/\s+/g, ' ').trim();
+    const now = Date.now();
+    if (!normalizedText) return;
+
+    if (now - lastFinalAt < 5000) {
+      if (normalizedText === lastFinalText) return;
+      if (lastFinalText && normalizedText.startsWith(`${lastFinalText} `)) {
+        text = normalizedText.slice(lastFinalText.length).trim();
+      } else if (lastFinalText && lastFinalText.startsWith(`${normalizedText} `)) {
+        return;
+      }
+    }
+    lastFinalText = normalizedText;
+    lastFinalAt = now;
+
     const needsLeadingSpace = notes.value.length > 0 && !/\s$/.test(notes.value);
     let prefix = needsLeadingSpace ? ' ' : '';
     if (!sessionStarted) {
@@ -210,6 +228,8 @@
       shouldKeepListening = false;
       isPaused = false;
       sessionStarted = false;
+      lastFinalText = '';
+      lastFinalAt = 0;
       restartRecognition();
       setListeningUI(false);
       showCaption('');
@@ -217,6 +237,8 @@
       shouldKeepListening = true;
       isPaused = false;
       sessionStarted = false;
+      lastFinalText = '';
+      lastFinalAt = 0;
       startRecognition();
     }
   });
@@ -227,7 +249,7 @@
       isPaused = false;
       shouldKeepListening = true;
       setListeningUI(false);
-      scheduleRecognitionStart();
+      startRecognition();
       return;
     }
     if (!shouldKeepListening && !isListening) return;
