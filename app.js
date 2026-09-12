@@ -57,6 +57,14 @@
   let isListening = false;
   let shouldKeepListening = false;
   let sessionStarted = false;
+  let mixedLanguageIndex = 0;
+
+  function getRecognitionLanguage() {
+    if (langSelect.value !== 'mixed-PH') return langSelect.value;
+    const language = mixedLanguageIndex % 2 === 0 ? 'fil-PH' : 'en-PH';
+    mixedLanguageIndex++;
+    return language;
+  }
 
   if (!SpeechRecognition) {
     unsupportedBanner.hidden = false;
@@ -70,7 +78,7 @@
     const r = new SpeechRecognition();
     r.continuous = true;
     r.interimResults = true;
-    r.lang = langSelect.value;
+    r.lang = langSelect.value === 'mixed-PH' ? 'fil-PH' : langSelect.value;
 
     r.onresult = (event) => {
       let finalChunk = '';
@@ -120,7 +128,7 @@
   function startRecognition() {
     if (!recognition) return;
     try {
-      recognition.lang = langSelect.value;
+      recognition.lang = getRecognitionLanguage();
       recognition.start();
       isListening = true;
       setListeningUI(true);
@@ -132,6 +140,7 @@
   function restartRecognition() {
     if (!recognition) return;
     try { recognition.stop(); } catch (e) {}
+    mixedLanguageIndex = 0;
     recognition = createRecognition();
     if (shouldKeepListening) startRecognition();
   }

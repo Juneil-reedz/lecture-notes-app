@@ -34,6 +34,7 @@ Auto-transcription uses the Web Speech API, supported in Chrome, Edge, and Safar
 ## How it works
 
 - Tap the mic button to start listening; it keeps listening continuously (auto-restarts through pauses) until you tap it again.
+- Choose **Filipino + English (mixed)** when a lecture switches between Tagalog and English. The browser alternates Filipino and Philippine-English recognition models between speech segments; results vary by browser because the Web Speech API does not provide true simultaneous language detection.
 - Recognized speech is appended to the notes area, each recording session prefixed with a timestamp.
 - While listening, the current in-progress phrase shows in the caption bar above the mic button before it's finalized into the notes.
 - You can click/tap into the notes and type or edit at any time, whether or not it's listening.
